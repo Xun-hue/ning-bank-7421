@@ -142,7 +142,7 @@ function log(Ls,Rs){
     return `<div class="box" data-a="rcpt" data-id="${x.id}"><div class="row sp"><div><b>${esc(x.n)}</b><div class="sm">${d}${x.date?' · 預約 '+esc(x.date):''}</div></div><div style="text-align:right"><b>-${Number(x.price).toLocaleString()}</b><br><span class="tag ${c[1]}">${c[0]}</span></div></div>${x.reply?`<div class="sm rg" style="margin-top:6px">客戶經理：${esc(x.reply)}</div>`:''}</div>`}).join('')||'<p class="sm">還沒有紀錄</p>';
 }
 function render(){
-  $('#app').innerHTML=view();setTimeout(drawQR,0);
+  $('#app').innerHTML=view()+'<p class="sm" style="text-align:center;margin:28px 0 0;opacity:.45">v3</p>';setTimeout(drawQR,0);
   const A=S.admin&&!S.prev,np=S.r.filter(x=>x.status==='pending').length+S.w.filter(x=>x.st==='open').length;
   const T=A?[['pend','📥','待處理'],['cpn','🎫','券管理'],['pay','📲','收款'],['cr','💰','入帳'],['prev','👁','她的畫面']]:[['home','🏠','首頁'],['ex','🎁','兌換'],['log','🧾','記錄'],['card','💳','卡片']].concat(S.admin?[['back','⚙️','後台']]:[]);
   $('#nav').innerHTML=(S.p&&!S.err)?T.map(([k,i,n])=>`<button data-a="tab" data-id="${k}" class="${S.tab===k?'on':''}"><i>${i}</i>${n}${k==='pend'&&np?'<span class="dot"></span>':''}</button>`).join(''):'';
