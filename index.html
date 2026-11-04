@@ -117,6 +117,8 @@ const CER=()=>`<div class="cer ${S.cs?'on':''}"><p class="sm" style="letter-spac
 function daysH(){const n=new Date(today()),s0=new Date(SINCE),d=Math.floor((n-s0)/864e5)+1;let y=n.getUTCFullYear(),a=Date.UTC(y,10,27);if(a<n.getTime())a=Date.UTC(++y,10,27);const left=Math.round((a-n.getTime())/864e5),yr=y-s0.getUTCFullYear();return `<div class="box row sp"><div><div class="sm">我們在一起的第</div><div class="bal" style="font-size:26px">${d.toLocaleString()} 天</div></div><div class="sm" style="text-align:right">${left===0?'今天是 '+yr+' 週年 ♥':'距離 '+yr+' 週年<br>還有 '+left+' 天'}</div></div>`}
 const seen=()=>{try{return JSON.parse(localStorage.getItem('seen')||'[]')}catch(e){return[]}};
 function newsH(){const sn=seen(),lim=Date.now()-2592e5;const L=S.r.filter(x=>!x.p&&(x.status==='pending'||(!sn.includes(x.id)&&Date.parse(x.ts)>lim))).sort((a,b)=>a.ts<b.ts?1:-1).slice(0,4);if(!L.length)return '';const T={pending:['⏳','處理中，等待客戶經理'],done:['✅','客戶經理已同意並完成'],rejected:['❌','客戶經理已退回，點數已退還']};return `<div class="box"><div class="sm" style="margin-bottom:6px">兌換進度</div>${L.map(x=>`<div style="margin:6px 0">${T[x.status][0]} <b>${esc(x.n)}</b><div class="sm">${T[x.status][1]}${x.reply?'：'+esc(x.reply):''}</div></div>`).join('')}${L.some(x=>x.status!=='pending')?'<button class="b g" data-a="gotit">知道了</button>':''}</div>`}
+const herLink=()=>location.origin+location.pathname;
+const ntfy=(t,msg)=>modal(`<div class="ck">✓</div><h1 style="font-size:18px">${t}</h1><p class="sm">要不要傳 LINE 通知她？</p><a class="b" style="display:inline-block;text-decoration:none;margin:12px 6px 0" href="https://line.me/R/share?text=${encodeURIComponent(msg)}">通知她</a><button class="b g" style="margin-top:12px" data-a="close">不用了</button>`);
 function view(){
   if(S.err)return `<p class="r">${esc(S.err)}</p>`;
   if(!S.ready.p||!S.ready.c||!S.ready.a||!S.ready.s)return '<p class="sm">載入中…</p>';
@@ -156,7 +158,7 @@ function log(Ls,Rs){
     return `<div class="box" data-a="rcpt" data-id="${x.id}"><div class="row sp"><div><b>${esc(x.n)}</b><div class="sm">${d}${x.date?' · 預約 '+esc(x.date):''}</div></div><div style="text-align:right"><b>-${Number(x.price).toLocaleString()}</b><br><span class="tag ${c[1]}">${c[0]}</span></div></div>${x.reply?`<div class="sm rg" style="margin-top:6px">客戶經理：${esc(x.reply)}</div>`:''}</div>`}).join('')||'<p class="sm">還沒有紀錄</p>';
 }
 function render(){
-  $('#app').innerHTML=view()+'<p class="sm" style="text-align:center;margin:28px 0 0;opacity:.45">v9</p>';setTimeout(drawQR,0);setTimeout(rollBal,0);
+  $('#app').innerHTML=view()+'<p class="sm" style="text-align:center;margin:28px 0 0;opacity:.45">v11</p>';setTimeout(drawQR,0);setTimeout(rollBal,0);
   const A=S.admin&&!S.prev,np=S.r.filter(x=>x.status==='pending').length+S.w.filter(x=>x.st==='open').length;
   const T=A?[['pend','📥','待處理'],['cpn','🎫','券管理'],['pay','📲','收款'],['cr','💰','入帳'],['prev','👁','她的畫面']]:[['home','🏠','首頁'],['ex','🎁','兌換'],['log','🧾','記錄'],['card','💳','卡片']].concat(S.admin?[['back','⚙️','後台']]:[]);
   $('#nav').innerHTML=(S.p&&!S.err&&!cer())?T.map(([k,i,n])=>`<button data-a="tab" data-id="${k}" class="${S.tab===k?'on':''}"><i>${i}</i>${n}${k==='pend'&&np?'<span class="dot"></span>':''}</button>`).join(''):'';
@@ -190,14 +192,14 @@ document.addEventListener('click',async ev=>{
   else if(a==='go'){const c=S.c.find(x=>x.id===id),i=info(c);if(i.st!=='ok'){close();return}
     const date=v('rd');close();await db.collection('redeem').add({cid:id,n:c.n,price:c.price,status:'pending',ts:local(),mk:mkey(),date,reply:''});
     modal(`<div class="ck">✓</div><h1 style="font-size:18px">交易已受理</h1><div class="bal" style="margin:6px 0">-${Number(c.price).toLocaleString()}</div><p class="sm">${esc(c.n)} · 客戶經理處理中</p><a class="b" style="display:inline-block;text-decoration:none;margin:12px 6px 0" href="https://line.me/R/share?text=${encodeURIComponent('【'+S.p.name+'】兌換申請：'+c.n+'（'+fmt(c.price)+'），請小蛋處理 ♥')}">通知客戶經理</a><button class="b g" style="margin-top:12px" data-a="close">關閉</button>`)}
-  else if(a==='done'||a==='rej'){await db.doc('redeem/'+id).update({status:a==='done'?'done':'rejected',reply:v('re'+id)})}
+  else if(a==='done'||a==='rej'){const x=S.r.find(r=>r.id===id),rm=v('re'+id),ok=a==='done';await db.doc('redeem/'+id).update({status:ok?'done':'rejected',reply:rm});ntfy(ok?'已完成':'已退回',`【饅頭銀行】妳的兌換「${x.n}」${ok?'已完成 ♥':'已退回，NT$ '+Number(x.price).toLocaleString()+' 已退還'}${rm?'\n'+rm:''}\n看詳情：${herLink()}`)}
   else if(a==='save'){const n=v('en').trim(),p=Number(v('ep'));if(!n||!(p>=0))return alert('請填名稱和價格');const e=S.edit||{};
     const d={n,price:p,cat:v('ec'),ic:v('ei')||'🎫',lt:v('et'),ln:Number(v('el'))||0,exp:v('ex'),on:e.on??true,hid:e.hid||false,pin:e.pin||false,w:e.wid||e.w||'',o:e.o??Date.now()};
     await db.doc('coupons/'+(e.id||'c'+Date.now())).set(d);S.edit=null;render()}
   else if(a==='edit'){S.edit=S.c.find(x=>x.id===id);render();window.scrollTo(0,0)}
   else if(a==='cancel'){S.edit=null;render()}
   else if(a==='tog'){const c=S.c.find(x=>x.id===id);await db.doc('coupons/'+id).update({on:!c.on})}
-  else if(a==='credit'){const n=Number(v('ca'));if(!n)return;await db.collection('ledger').add({amt:n,note:v('cn')||'入帳',ts:local()});$('#ca').value='';$('#cn').value=''}
+  else if(a==='credit'){const n=Number(v('ca'));if(!n)return;const nt=v('cn')||'入帳';await db.collection('ledger').add({amt:n,note:nt,ts:local()});$('#ca').value='';$('#cn').value='';ntfy(n>0?'入帳完成':'扣款完成',`【饅頭銀行】${n>0?'入帳':'扣款'} NT$ ${Math.abs(n).toLocaleString()}：${nt} ♥\n看詳情：${herLink()}`)}
   else if(a==='prof'){await db.doc('bank/profile').set({name:v('pn')||'寶貝',monthly:Number(v('pm'))||0,brand:v('pb')||'♥',msg:v('pg'),em:v('pe'),loan:Number(v('pl'))||0,daily:v('pd')===''?20:Number(v('pd')),bonuses:v('pbn').split('\n').map(l=>l.trim().match(/^(\d\d-\d\d)\s+(\d+)\s*(.*)$/)).filter(Boolean).map(m=>({md:m[1],amt:+m[2],note:m[3]||'紅利入帳'}))});alert('已儲存')}
   }catch(e){alert('操作失敗：'+(e.message||e.code||e))}
 });
