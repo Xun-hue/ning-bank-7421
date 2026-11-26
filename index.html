@@ -62,7 +62,6 @@ nav button{border-radius:22px;padding:6px 0}nav .on{background:linear-gradient(1
 .rip{position:relative;width:110px;height:110px;margin:10px auto 14px;display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--rg);letter-spacing:2px}.rip i{position:absolute;inset:0;border:2px solid var(--rg);border-radius:50%;animation:rp 1.4s ease-out infinite}.rip i+i{animation-delay:.5s}@keyframes rp{from{transform:scale(.4);opacity:.9}to{transform:scale(1.15);opacity:0}}nav i svg{width:22px;height:22px;display:block;margin:0 auto 2px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.li{width:1.15em;height:1.15em;vertical-align:-.2em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}input,select,textarea,input::placeholder,textarea::placeholder{text-overflow:ellipsis}</style></head><body>
 <div id="app"><p class="sm">載入中…</p></div><nav id="nav"></nav><div id="modal"></div>
 <script async src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" onload="window.render&&render()"></script>
-<script async src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" onerror="var x=document.createElement('script');x.src='https://unpkg.com/jsqr@1.4.0/dist/jsQR.js';document.head.appendChild(x)"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -123,10 +122,11 @@ function payLookup(id){S.db.doc('pay/'+id).get().then(s=>{if(!s.exists)return al
   if(d.status!=='open')return modal('<h1 style="font-size:18px">此收款碼已使用</h1><button class="b" style="margin-top:12px" data-a="close">關閉</button>');
   S.payInfo={id:s.id,...d};modal(`<div class="sm">收款確認</div><div class="bal" style="margin:8px 0">${fmt(d.amt)}</div><p class="sm">${esc(d.note||'')}</p><div class="row" style="margin-top:12px"><button class="b g" style="flex:1" data-a="close">取消</button><button class="b" style="flex:1" data-a="payok">確認付款</button></div>`)}).catch(()=>alert('讀取收款碼失敗，請確認網路'))}
 const scanId=t=>{try{const u=new URL(t);if(u.origin!==location.origin)return null;const m=u.hash.match(/^#pay=(\w+)$/);return m?m[1]:null}catch(e){return null}};
+function loadJsqr(){if(typeof jsQR!=='undefined')return Promise.resolve();return new Promise((ok,no)=>{const L=['https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js','https://unpkg.com/jsqr@1.4.0/dist/jsQR.js'];let i=0;const t=()=>{if(typeof jsQR!=='undefined')return ok();if(i>=L.length)return no();const x=document.createElement('script');x.src=L[i++];x.onload=()=>typeof jsQR!=='undefined'?ok():t();x.onerror=t;document.head.appendChild(x)};t()})}
 function stopScan(){const c=S.sc;if(!c)return;S.sc=null;c.on=0;try{c.st&&c.st.getTracks().forEach(t=>t.stop())}catch(e){}}
 async function startScan(){const v=$('#svd'),msg=$('#smsg');if(!v||!msg)return;
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){msg.textContent='這裡無法使用相機，請改用手機相機掃碼';return}
-  if(typeof jsQR==='undefined'){msg.textContent='掃描程式還沒載入，請稍後再試，或改用手機相機掃碼';return}
+  if(typeof jsQR==='undefined'){msg.textContent='載入掃描程式中…';try{await loadJsqr()}catch(e){if(!document.body.contains(msg))return;msg.textContent='掃描程式載入失敗（網路或來源被擋），請改用手機相機掃碼';return}if(!document.body.contains(msg))return;msg.textContent='把小蛋手機上的收款碼放進框內'}
   const c=S.sc={on:1,st:null};
   try{const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
     if(S.sc!==c){st.getTracks().forEach(t=>t.stop());return}
@@ -255,7 +255,7 @@ function log(Ls,Rs,k){
     return `<div class="box" data-a="rcpt" data-id="${x.id}"><div class="row sp"><div><b>${esc(x.n)}</b><div class="sm">${d}${x.date?' · 預約 '+esc(x.date):''}</div></div><div style="text-align:right"><b>-${Number(x.price).toLocaleString()}</b><br><span class="tag ${c[1]}">${c[0]}</span></div></div>${x.reply?`<div class="sm rg" style="margin-top:6px">小蛋：${esc(x.reply)}</div>`:''}</div>`}).join('')||'<p class="sm">還沒有紀錄</p>')+(all.length>n?`<button class="b g" style="width:100%;margin:4px 0 10px" data-a="more" data-id="${k||'x'}">看更多（還有 ${all.length-n} 筆）</button>`:'');
 }
 function render(){
-  $('#app').innerHTML=view()+'<p class="sm" style="text-align:center;margin:28px 0 0;opacity:.45">v30</p>';setTimeout(drawQR,0);setTimeout(rollBal,0);
+  $('#app').innerHTML=view()+'<p class="sm" style="text-align:center;margin:28px 0 0;opacity:.45">v31</p>';setTimeout(drawQR,0);setTimeout(rollBal,0);
   const A=S.admin&&!S.prev,np=S.r.filter(x=>x.status==='pending').length+S.w.filter(x=>x.st==='open').length+S.e.filter(x=>x.status==='pending').length;
   const T=A?[['pend','📥','審核中心'],['cpn','🎫','票券'],['tsk','🧽','家務'],['acct','💰','帳務'],['set','⚙️','設定'],['prev','👁','她的畫面']]:[['home','🏠','首頁'],['ex','🎁','兌換'],['task','🧽','家務'],['log','🧾','明細'],['card','💳','卡片']].concat(S.admin?[['back','⚙️','後台']]:[]);
   $('#nav').innerHTML=(S.p&&!S.err&&!cer())?T.map(([k,i,n])=>`<button data-a="tab" data-id="${k}" class="${S.tab===k?'on':''}"><i>${P[k]?sv(P[k]):i}</i>${n}${k==='pend'&&np?'<span class="dot"></span>':''}</button>`).join(''):'';
