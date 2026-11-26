@@ -62,7 +62,7 @@ nav button{border-radius:22px;padding:6px 0}nav .on{background:linear-gradient(1
 .rip{position:relative;width:110px;height:110px;margin:10px auto 14px;display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--rg);letter-spacing:2px}.rip i{position:absolute;inset:0;border:2px solid var(--rg);border-radius:50%;animation:rp 1.4s ease-out infinite}.rip i+i{animation-delay:.5s}@keyframes rp{from{transform:scale(.4);opacity:.9}to{transform:scale(1.15);opacity:0}}nav i svg{width:22px;height:22px;display:block;margin:0 auto 2px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.li{width:1.15em;height:1.15em;vertical-align:-.2em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}input,select,textarea,input::placeholder,textarea::placeholder{text-overflow:ellipsis}</style></head><body>
 <div id="app"><p class="sm">載入中…</p></div><nav id="nav"></nav><div id="modal"></div>
 <script async src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" onload="window.render&&render()"></script>
-<script async src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" onerror="var x=document.createElement('script');x.src='https://unpkg.com/jsqr@1.4.0/dist/jsQR.js';document.head.appendChild(x)"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
